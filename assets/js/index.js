@@ -1,9 +1,10 @@
+const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
 
 const getTalks = async () => {
 	try {
-		const response = await fetch('https://pretalx.luga.de/lit-2024/schedule/export/schedule.json')
+		const response = await fetch(SCHEDULE_URL)
 		return await response.json()
 	} catch (error) {
 		console.error(`Could not fetch schedule data due to following error: \n ${error}`)
@@ -136,13 +137,3 @@ const persistScheduleHash = async (schedule) => {
 	const hash = await hashSchedule(schedule)
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
-
-(async () => {
-	const schedule = await getTalks()
-
-	const scheduleChanged = await hasScheduleChanged(schedule)
-	if (scheduleChanged) {
-		processAndPersistSchedule(schedule)
-		persistScheduleHash(schedule)
-	}
-})()
