@@ -1,0 +1,12 @@
+body {
+	text-align: center;
+}
+
+button {
+	margin: 1rem;
+}
+
+.card {
+	border: 1px solid red;
+	border-radius: 15px;
+}

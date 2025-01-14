@@ -2,6 +2,17 @@ const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
 
+const init = async () => {
+	await initScheduleData()
+	renderInitialView()
+}
+
+const initScheduleData = async () => {
+	const schedule = await getTalks()
+	processAndPersistSchedule(schedule)
+	persistScheduleHash(schedule)
+}
+
 const getTalks = async () => {
 	try {
 		const response = await fetch(SCHEDULE_URL)
@@ -137,3 +148,108 @@ const persistScheduleHash = async (schedule) => {
 	const hash = await hashSchedule(schedule)
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
+
+const updateSchedule = async () => {
+	const scheduleChanged = await hasScheduleChanged(schedule)
+	if (scheduleChanged) {
+		processAndPersistSchedule(schedule)
+		persistScheduleHash(schedule)
+	}
+}
+
+const renderInitialView = () => {
+	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	createButton('Übersicht', displayRoomSchedule.bind(null, 'Übersicht'))
+	for (const room of Object.keys(schedule)) {
+		if (schedule.hasOwnProperty(room)) {
+			if (room === 'Raum E' || room === 'Raum F') {
+				continue
+			}
+			createButton(room, displayRoomSchedule.bind(null, room))
+		}
+	}
+}
+
+const createButton = (room, callback) => {
+	const button = document.createElement('button')
+	button.innerText = room
+	button.addEventListener('click', callback)
+	document.body.querySelector('#root').appendChild(button)
+}
+
+const displayRoomSchedule = (room) => {
+	clearBody()
+	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	const [currentTalk, nextTalk] = getCurrentAndNextTalk(schedule[room])
+	if (currentTalk) {
+		document.body.appendChild(createCard(currentTalk))
+	}
+
+	if (nextTalk) {
+		document.body.appendChild(createCard(nextTalk, false))
+	}
+}
+
+const createCard = (talk, isCurrent = true) => {
+	const cardHeader = document.createElement('h2')
+	cardHeader.innerText = isCurrent ? 'Current Talk' : 'Next Talk'
+
+	const talkTitle = document.createElement('h4')
+	talkTitle.innerText = talk.title
+
+	const speaker = document.createElement('p')
+	speaker.innerText = talk.speaker
+
+	const cardBody = document.createElement('div')
+	cardBody.append(cardHeader, talkTitle, speaker)
+
+	const card = document.createElement('div')
+	card.id = isCurrent ? 'current' : 'next'
+	card.classList.add('card')
+	card.appendChild(cardBody)
+
+	return card
+}
+
+const getCurrentAndNextTalk = (roomSchedule) => {
+	if (!roomSchedule) {
+		return null
+	}
+	const now = new Date('2024-04-20T10:28:00.000Z').getTime()
+	let currentTalk = null
+	let nextTalk = null
+	for (let i = 0; i < roomSchedule.length; i++) {
+		if (currentTalk && nextTalk) {
+			break
+		}
+
+		let talk = roomSchedule[i]
+		const talkStart = new Date(talk.start).getTime()
+		const talkEnd = new Date(talk.end).getTime()
+		if (
+			talkStart <= now &&
+			now <= talkEnd
+		) {
+			currentTalk = talk
+		}
+
+		const newTalk = roomSchedule[i+1]
+		const newTalkStart = new Date(newTalk?.start).getTime()
+		if (
+			newTalk &&
+			now < newTalkStart
+		) {
+			nextTalk = talk
+		}
+	}
+
+	return [currentTalk, nextTalk]
+}
+const clearBody = () => {
+	const root = document.querySelector('#root')
+	while (root.firstChild) {
+		root.removeChild(root.lastChild)
+	}
+}
+
+document.addEventListener('DOMContentLoaded', init)
