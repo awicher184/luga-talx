@@ -212,42 +212,30 @@ const createCard = (talk, isCurrent = true) => {
 }
 
 const getCurrentAndNextTalk = (roomSchedule) => {
-	if (!roomSchedule) {
-		return null
+	if (!roomSchedule?.length) {
+		return [null, null];
 	}
-	const now = new Date('2024-04-20T10:28:00.000Z').getTime()
-	const now = formatToHoursAndMinutes(new Date('2025-01-16T10:01:00'))
+
+	const now = formatToHoursAndMinutes(new Date('2025-01-16T10:01:00'));
+
 	let currentTalk = null
+	currentTalk = roomSchedule.find(talk => {
+		const start = formatToHoursAndMinutes(new Date(talk.start));
+		const end = formatToHoursAndMinutes(new Date(talk.end));
+		return start <= now && now <= end;
+	});
+
 	let nextTalk = null
-	for (let i = 0; i < roomSchedule.length; i++) {
-		if (
-			(currentTalk && nextTalk) &&
-			(currentTalk != nextTalk)
-		) {
-			break
+	const currentIndex = roomSchedule.indexOf(currentTalk);
+	nextTalk = roomSchedule.find((talk, index) => {
+		if (index <= currentIndex) {
+			return false;
 		}
+		const start = formatToHoursAndMinutes(new Date(talk.start));
+		return now < start;
+	});
 
-		let talk = roomSchedule[i]
-		const talkStart = formatToHoursAndMinutes(new Date(talk.start))
-		const talkEnd = formatToHoursAndMinutes(new Date(talk.end))
-		if (
-			talkStart <= now &&
-			now <= talkEnd
-		) {
-			currentTalk = talk
-		}
-
-		const newTalk = roomSchedule[i+1]
-		const newTalkStart = formatToHoursAndMinutes(new Date(newTalk?.start))
-		if (
-			newTalk &&
-			now < newTalkStart
-		) {
-			nextTalk = talk
-		}
-	}
-
-	return [currentTalk, nextTalk]
+	return [currentTalk , nextTalk ];
 }
 
 const formatToHoursAndMinutes = (date) => {
