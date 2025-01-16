@@ -216,16 +216,20 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		return null
 	}
 	const now = new Date('2024-04-20T10:28:00.000Z').getTime()
+	const now = formatToHoursAndMinutes(new Date('2025-01-16T10:01:00'))
 	let currentTalk = null
 	let nextTalk = null
 	for (let i = 0; i < roomSchedule.length; i++) {
-		if (currentTalk && nextTalk) {
+		if (
+			(currentTalk && nextTalk) &&
+			(currentTalk != nextTalk)
+		) {
 			break
 		}
 
 		let talk = roomSchedule[i]
-		const talkStart = new Date(talk.start).getTime()
-		const talkEnd = new Date(talk.end).getTime()
+		const talkStart = formatToHoursAndMinutes(new Date(talk.start))
+		const talkEnd = formatToHoursAndMinutes(new Date(talk.end))
 		if (
 			talkStart <= now &&
 			now <= talkEnd
@@ -234,7 +238,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		}
 
 		const newTalk = roomSchedule[i+1]
-		const newTalkStart = new Date(newTalk?.start).getTime()
+		const newTalkStart = formatToHoursAndMinutes(new Date(newTalk?.start))
 		if (
 			newTalk &&
 			now < newTalkStart
@@ -245,6 +249,14 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 
 	return [currentTalk, nextTalk]
 }
+
+const formatToHoursAndMinutes = (date) => {
+	const hours = date.getHours().toString().padStart(2, '0');
+	const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+	return parseInt(hours + minutes);
+}
+
 const clearBody = () => {
 	const root = document.querySelector('#root')
 	while (root.firstChild) {
