@@ -159,27 +159,33 @@ const updateSchedule = async () => {
 
 const renderInitialView = () => {
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
-	createButton('Übersicht', displayRoomSchedule.bind(null, 'Übersicht'))
+	createButtonWithEventListeners('Übersicht', displayRoomSchedule.bind(null, 'Übersicht'))
 	for (const room of Object.keys(schedule)) {
 		if (schedule.hasOwnProperty(room)) {
 			if (room === 'Raum E' || room === 'Raum F') {
 				continue
 			}
-			createButton(room, displayRoomSchedule.bind(null, room))
+			createButtonWithEventListeners(room, displayRoomSchedule.bind(null, room))
 		}
 	}
 }
 
-const createButton = (room, callback) => {
+const createButtonWithEventListeners = (room, callback) => {
 	const button = document.createElement('button')
 	button.innerText = room
-	button.addEventListener('click', callback)
+	button.addEventListener('click', () => {
+		callback()
+		setInterval(() => {
+			updateSchedule()
+			callback()
+	}, 30000)})
 	getRoot().appendChild(button)
 }
 
 const getRoot = () => {
 	return document.body.querySelector('#root')
 }
+
 const displayRoomSchedule = (room) => {
 	clearBody()
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
