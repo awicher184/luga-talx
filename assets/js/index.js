@@ -174,19 +174,22 @@ const createButton = (room, callback) => {
 	const button = document.createElement('button')
 	button.innerText = room
 	button.addEventListener('click', callback)
-	document.body.querySelector('#root').appendChild(button)
+	getRoot().appendChild(button)
 }
 
+const getRoot = () => {
+	return document.body.querySelector('#root')
+}
 const displayRoomSchedule = (room) => {
 	clearBody()
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	const [currentTalk, nextTalk] = getCurrentAndNextTalk(schedule[room])
 	if (currentTalk) {
-		document.body.appendChild(createCard(currentTalk))
+		getRoot().appendChild(createCard(currentTalk))
 	}
 
 	if (nextTalk) {
-		document.body.appendChild(createCard(nextTalk, false))
+		getRoot().appendChild(createCard(nextTalk, false))
 	}
 }
 
