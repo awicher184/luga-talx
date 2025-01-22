@@ -1,6 +1,7 @@
 const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
+const FALLBACK_TEXT = '\\[T]/ Praise The Sun \\[T]/'
 
 const init = async () => {
 	await initScheduleData()
@@ -164,32 +165,52 @@ const updateSchedule = async (schedule) => {
 }
 
 const renderInitialView = () => {
+	clearBody()
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
-	createButtonWithEventListeners('Übersicht', displayRoomSchedule.bind(null, 'Übersicht'))
+	schedule ? renderMainView(schedule) : renderFallBackView()
+
+}
+
+
+const renderMainView = (schedule) => {
+	getRoot().appendChild(createButton('Übersicht', displayOverview))
 	for (const room of Object.keys(schedule)) {
 		if (schedule.hasOwnProperty(room)) {
 			if (room === 'Raum E' || room === 'Raum F') {
 				continue
 			}
-			createButtonWithEventListeners(room, displayRoomSchedule.bind(null, room))
+			let button = createButton(room, displayRoomSchedule.bind(null, room))
+			getRoot().appendChild(button)
 		}
 	}
 }
 
-const createButtonWithEventListeners = (room, callback) => {
-	const button = document.createElement('button')
-	button.innerText = room
-	button.addEventListener('click', () => {
-		callback()
-		setInterval(() => {
-			updateSchedule()
-			callback()
-	}, 30000)})
-	getRoot().appendChild(button)
+const renderFallBackView = () => {
+	const headline = document.createElement('h3')
+	headline.innerText = 'Linux Info Tag'
+
+	const paragraph = document.createElement('p')
+	paragraph.innerText = FALLBACK_TEXT
+	
+	const container = document.createElement('div')
+	container.append(headline, paragraph)
+
+	getRoot().appendChild(container)
 }
 
-const getRoot = () => {
-	return document.body.querySelector('#root')
+const createButton = (room, callback) => {
+	const button = document.createElement('button')
+	button.innerText = room
+	button.addEventListener('click', callback)
+	return button
+}
+
+const displayOverview = () => {
+	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	for (const room in schedule) {
+		setInterval(displayRoomSchedule.bind(null, room) , 60000);
+	}
+		
 }
 
 const displayRoomSchedule = (room) => {
@@ -265,6 +286,10 @@ const clearBody = () => {
 	while (root.firstChild) {
 		root.removeChild(root.lastChild)
 	}
+}
+
+const getRoot = () => {
+	return document.body.querySelector('#root')
 }
 
 document.addEventListener('DOMContentLoaded', init)
