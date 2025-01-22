@@ -155,7 +155,7 @@ const persistScheduleHash = async (schedule) => {
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
 
-const updateSchedule = async () => {
+const updateSchedule = async (schedule) => {
 	const scheduleChanged = await hasScheduleChanged(schedule)
 	if (scheduleChanged) {
 		processAndPersistSchedule(schedule)
