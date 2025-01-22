@@ -208,6 +208,9 @@ const createButton = (room, callback) => {
 
 const displayOverview = () => {
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	if (!schedule) {
+		renderFallBackView()
+	}
 	for (const room in schedule) {
 		setInterval(displayRoomSchedule.bind(null, room) , 60000);
 	}
@@ -215,8 +218,12 @@ const displayOverview = () => {
 }
 
 const displayRoomSchedule = (room) => {
-	clearBody()
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	if (!schedule) {
+		renderFallBackView()
+	}
+
+	clearBody()
 	const [currentTalk, nextTalk] = getCurrentAndNextTalk(schedule[room])
 	if (currentTalk) {
 		getRoot().appendChild(createCard(currentTalk))
