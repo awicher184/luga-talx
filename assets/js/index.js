@@ -255,6 +255,9 @@ const displayRoomSchedule = (room) => {
 
 	clearBody()
 
+	const header = document.createElement('h1')
+	header.innerText = room
+	getRoot().appendChild(header)
 	const [currentTalk, nextTalk] = getCurrentAndNextTalk(schedule[room])
 	
 	if (currentTalk) {
