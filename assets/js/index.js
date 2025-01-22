@@ -7,6 +7,8 @@ const FALLBACK_TEXT = '\\[T]/ Praise The Sun \\[T]/'
 const OVERVIEW = 'Übersicht'
 const UPDATE_INTERVAL_MILLISECONDS = 5000
 const LOOP_INTERVAL_MILLISECONDS = 5000
+const FALLBACK_CURRENT_TALK = {"speaker":"","title":"Aktuell laeuft kein Vortrag","subtitle":"","start":"","end":""}
+const FALLBACK_NEXT_TALK = {"speaker":"","title":"Heute ist nicht aller Tage Abend. Wir kommen wieder, keine Frage!","subtitle":"","start":"","end":""}
 
 const init = async () => {
 	await initScheduleData()
@@ -168,12 +170,14 @@ const updateSchedule = async (schedule) => {
 		const scheduleChanged = await hasScheduleChanged(schedule)
 
 		if (scheduleChanged) {
-		console.log('updated')
 			schedule = await getTalks()
 			processAndPersistSchedule(schedule)
 			persistScheduleHash(schedule)
 			const room = window.localStorage.getItem(STORAGE_KEY_ROOM)
-			room === OVERVIEW || room === 'null' ? displayOverview() : displayRoomSchedule(room)
+			if (!room) {
+				return
+			}
+			room === OVERVIEW ? displayOverview() : displayRoomSchedule(room)
 		}
 	}, UPDATE_INTERVAL_MILLISECONDS);
 }
@@ -285,21 +289,20 @@ const createCard = (talk, isCurrent = true) => {
 
 const getCurrentAndNextTalk = (roomSchedule) => {
 	if (!roomSchedule?.length) {
-		return [null, null]
+		return [FALLBACK_CURRENT_TALK, FALLBACK_NEXT_TALK]
 	}
 
 	const now = formatToHoursAndMinutes(new Date('2025-01-16T08:51:00'))
 
-	let currentTalk = null
-	currentTalk = roomSchedule.find(talk => {
+	let currentTalk = roomSchedule.find(talk => {
 		const start = formatToHoursAndMinutes(new Date(talk.start))
 		const end = formatToHoursAndMinutes(new Date(talk.end))
 		return start <= now && now <= end
 	})
+	currentTalk = currentTalk ?? FALLBACK_CURRENT_TALK
 
-	let nextTalk = null
 	const currentIndex = roomSchedule.indexOf(currentTalk)
-	nextTalk = roomSchedule.find((talk, index) => {
+	let nextTalk = roomSchedule.find((talk, index) => {
 		if (index <= currentIndex) {
 			return false
 		}
@@ -307,6 +310,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		const start = formatToHoursAndMinutes(new Date(talk.start))
 		return now < start
 	})
+	nextTalk = nextTalk ?? FALLBACK_NEXT_TALK
 
 	return [currentTalk , nextTalk]
 }
