@@ -165,7 +165,6 @@ const updateSchedule = async (schedule) => {
 }
 
 const renderInitialView = () => {
-	clearBody()
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	schedule ? renderMainView(schedule) : renderFallBackView()
 
@@ -173,6 +172,7 @@ const renderInitialView = () => {
 
 
 const renderMainView = (schedule) => {
+	clearBody()
 	getRoot().appendChild(createButton('Übersicht', displayOverview))
 	for (const room of Object.keys(schedule)) {
 		if (schedule.hasOwnProperty(room)) {
@@ -186,6 +186,7 @@ const renderMainView = (schedule) => {
 }
 
 const renderFallBackView = () => {
+	clearBody()
 	const headline = document.createElement('h3')
 	headline.innerText = 'Linux Info Tag'
 
