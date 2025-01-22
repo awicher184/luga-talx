@@ -1,6 +1,7 @@
 const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
+const FALLBACK_HEADLINE = 'Linux Info Tag'
 const FALLBACK_TEXT = '\\[T]/ Praise The Sun \\[T]/'
 
 const init = async () => {
@@ -44,7 +45,7 @@ const validateSchedule = (schedule) => {
 	) {
 		return false
 	}
-
+	
 	if (
 		!Object.hasOwn(schedule.schedule.conference, 'days') &&
 		schedule.schedule.conference.days === null &&
@@ -61,7 +62,7 @@ const validateSchedule = (schedule) => {
 	) {
 		return false
 	}
-	
+
 	if (
 		!Object.hasOwn(schedule.schedule.conference.days[0], 'rooms') &&
 		schedule.schedule.conference.days[0] === null &&
@@ -75,6 +76,7 @@ const validateSchedule = (schedule) => {
 
 const hasScheduleChanged = async (schedule) => {
 	const scheduleHash = window.localStorage.getItem(STORAGE_KEY_SCHEDULE_HASH)
+
 	if (!scheduleHash) {
 		return true
 	}
@@ -83,35 +85,30 @@ const hasScheduleChanged = async (schedule) => {
 	return scheduleHash !== newScheduleHash
 }
 
-/**
- * digest returns an ArrayBuffer. To display it as a string all 
- * values have to be converted to hexadecimal strings.
- * For in-depth explanations check:
- * - https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API/Non-cryptographic_uses_of_subtle_crypto
- * - https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
-*/
 const hashSchedule = async (schedule) => {
-	const encoder = new TextEncoder();
-	const encodedSchedule = encoder.encode(JSON.stringify(schedule));
-	const hashAsArrayBuffer = await window.crypto.subtle.digest('SHA-256', encodedSchedule);
+	const encoder = new TextEncoder()
+	const encodedSchedule = encoder.encode(JSON.stringify(schedule))
+	const hashAsArrayBuffer = await window.crypto.subtle.digest('SHA-256', encodedSchedule)
 	const uint8ViewOfHash = new Uint8Array(hashAsArrayBuffer)
 	const hashAsString = Array.from(uint8ViewOfHash)
 	.map((b) => b.toString(16).padStart(2, '0'))
 	.join('')
-	return hashAsString;
+	return hashAsString
 }
-
 
 const processAndPersistSchedule = (schedule) => {
 	if (!schedule) {
 		return
 	}
+
 	const processedSchedule = {}
 	const rooms = schedule?.schedule?.conference?.days[0]?.rooms
+
 	for (const [room, roomSchedule] of Object.entries(rooms)) {
 		if (!Object.hasOwn(processedSchedule, room)) {
 			processedSchedule[room] = []
 		}
+
 		roomSchedule.forEach(talk => {
 			const talkStart = new Date(talk.date)
 			const talkEnd = new Date(talkStart.getTime() + durationInMilliSeconds(talk.duration))
@@ -122,7 +119,6 @@ const processAndPersistSchedule = (schedule) => {
 				start: talkStart,
 				end: talkEnd,
 			}
-			
 			processedSchedule[room].push(processedTalk)
 		})
 	}
@@ -132,6 +128,7 @@ const processAndPersistSchedule = (schedule) => {
 
 const concatSpeakers = (persons) => {
 	let speakers = ''
+
 	for (let i = 0; i < persons.length; i++) {
 		if (i > 0 && i < persons?.length) {
 			speakers += ', '
@@ -144,7 +141,7 @@ const concatSpeakers = (persons) => {
 
 const durationInMilliSeconds = (duration) => {
 	const arr = duration.split(':')
-	const minutes  = (parseInt(arr[0] * 60)) + parseInt(arr[1])
+	const minutes = (parseInt(arr[0] * 60)) + parseInt(arr[1])
 	return minutes * 60 * 1000
 }
 
@@ -152,12 +149,14 @@ const persistScheduleHash = async (schedule) => {
 	if (!schedule) {
 		return
 	}
+
 	const hash = await hashSchedule(schedule)
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
 
 const updateSchedule = async (schedule) => {
 	const scheduleChanged = await hasScheduleChanged(schedule)
+
 	if (scheduleChanged) {
 		processAndPersistSchedule(schedule)
 		persistScheduleHash(schedule)
@@ -167,31 +166,31 @@ const updateSchedule = async (schedule) => {
 const renderInitialView = () => {
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	schedule ? renderMainView(schedule) : renderFallBackView()
-
 }
 
 const renderMainView = (schedule) => {
 	clearBody()
 	getRoot().appendChild(createButton('Übersicht', displayOverview))
+
 	for (const room of Object.keys(schedule)) {
-		if (schedule.hasOwnProperty(room)) {
-			if (room === 'Raum E' || room === 'Raum F') {
-				continue
-			}
-			let button = createButton(room, displayRoomSchedule.bind(null, room))
-			getRoot().appendChild(button)
+		if (room === 'Raum E' || room === 'Raum F') {
+			continue
 		}
+
+		let button = createButton(room, displayRoomSchedule.bind(null, room))
+		getRoot().appendChild(button)
 	}
 }
 
 const renderFallBackView = () => {
 	clearBody()
+
 	const headline = document.createElement('h3')
-	headline.innerText = 'Linux Info Tag'
+	headline.innerText = FALLBACK_HEADLINE
 
 	const paragraph = document.createElement('p')
 	paragraph.innerText = FALLBACK_TEXT
-	
+
 	const container = document.createElement('div')
 	container.append(headline, paragraph)
 
@@ -207,33 +206,35 @@ const createButton = (room, callback) => {
 
 const displayOverview = () => {
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+
 	if (!schedule) {
 		renderFallBackView()
 		return
 	}
 
-	const rooms = Object.keys(schedule);
+	const rooms = Object.keys(schedule)
 
 	const infitelyLoopRooms = (index = 0) => {
-		const room = rooms[index];
-		displayRoomSchedule(room);
-
-		const nextIndex = (index + 1) % rooms.length;
-
-		setTimeout(() => infitelyLoopRooms(nextIndex), 10000);
+		const room = rooms[index]
+		displayRoomSchedule(room)
+		const nextIndex = (index + 1) % rooms.length
+		setTimeout(() => infitelyLoopRooms(nextIndex), 10000)
 	}
 
-	infitelyLoopRooms();
+	infitelyLoopRooms()
 }
 
 const displayRoomSchedule = (room) => {
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+
 	if (!schedule) {
 		renderFallBackView()
 	}
 
 	clearBody()
+
 	const [currentTalk, nextTalk] = getCurrentAndNextTalk(schedule[room])
+	
 	if (currentTalk) {
 		getRoot().appendChild(createCard(currentTalk))
 	}
@@ -252,10 +253,10 @@ const createCard = (talk, isCurrent = true) => {
 
 	const speaker = document.createElement('p')
 	speaker.innerText = talk.speaker
-
 	const cardBody = document.createElement('div')
-	cardBody.append(cardHeader, talkTitle, speaker)
 
+	cardBody.append(cardHeader, talkTitle, speaker)
+	
 	const card = document.createElement('div')
 	card.id = isCurrent ? 'current' : 'next'
 	card.classList.add('card')
@@ -266,40 +267,41 @@ const createCard = (talk, isCurrent = true) => {
 
 const getCurrentAndNextTalk = (roomSchedule) => {
 	if (!roomSchedule?.length) {
-		return [null, null];
+		return [null, null]
 	}
 
-	const now = formatToHoursAndMinutes(new Date('2025-01-16T08:51:00'));
+	const now = formatToHoursAndMinutes(new Date('2025-01-16T08:51:00'))
 
 	let currentTalk = null
 	currentTalk = roomSchedule.find(talk => {
-		const start = formatToHoursAndMinutes(new Date(talk.start));
-		const end = formatToHoursAndMinutes(new Date(talk.end));
-		return start <= now && now <= end;
-	});
+		const start = formatToHoursAndMinutes(new Date(talk.start))
+		const end = formatToHoursAndMinutes(new Date(talk.end))
+		return start <= now && now <= end
+	})
 
 	let nextTalk = null
-	const currentIndex = roomSchedule.indexOf(currentTalk);
+	const currentIndex = roomSchedule.indexOf(currentTalk)
 	nextTalk = roomSchedule.find((talk, index) => {
 		if (index <= currentIndex) {
-			return false;
+			return false
 		}
-		const start = formatToHoursAndMinutes(new Date(talk.start));
-		return now < start;
-	});
 
-	return [currentTalk , nextTalk];
+		const start = formatToHoursAndMinutes(new Date(talk.start))
+		return now < start
+	})
+
+	return [currentTalk , nextTalk]
 }
 
 const formatToHoursAndMinutes = (date) => {
-	const hours = date.getHours().toString().padStart(2, '0');
-	const minutes = date.getMinutes().toString().padStart(2, '0');
-  
-	return parseInt(hours + minutes);
+	const hours = date.getHours().toString().padStart(2, '0')
+	const minutes = date.getMinutes().toString().padStart(2, '0')
+	return parseInt(hours + minutes)
 }
 
 const clearBody = () => {
 	const root = document.querySelector('#root')
+
 	while (root.firstChild) {
 		root.removeChild(root.lastChild)
 	}
