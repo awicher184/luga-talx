@@ -170,7 +170,6 @@ const renderInitialView = () => {
 
 }
 
-
 const renderMainView = (schedule) => {
 	clearBody()
 	getRoot().appendChild(createButton('Übersicht', displayOverview))
@@ -210,11 +209,21 @@ const displayOverview = () => {
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	if (!schedule) {
 		renderFallBackView()
+		return
 	}
-	for (const room in schedule) {
-		setInterval(displayRoomSchedule.bind(null, room) , 60000);
+
+	const rooms = Object.keys(schedule);
+
+	const infitelyLoopRooms = (index = 0) => {
+		const room = rooms[index];
+		displayRoomSchedule(room);
+
+		const nextIndex = (index + 1) % rooms.length;
+
+		setTimeout(() => infitelyLoopRooms(nextIndex), 10000);
 	}
-		
+
+	infitelyLoopRooms();
 }
 
 const displayRoomSchedule = (room) => {
@@ -260,7 +269,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		return [null, null];
 	}
 
-	const now = formatToHoursAndMinutes(new Date('2025-01-16T10:01:00'));
+	const now = formatToHoursAndMinutes(new Date('2025-01-16T08:51:00'));
 
 	let currentTalk = null
 	currentTalk = roomSchedule.find(talk => {
@@ -279,7 +288,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		return now < start;
 	});
 
-	return [currentTalk , nextTalk ];
+	return [currentTalk , nextTalk];
 }
 
 const formatToHoursAndMinutes = (date) => {
