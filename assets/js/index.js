@@ -3,6 +3,8 @@ const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
 const FALLBACK_HEADLINE = 'Linux Info Tag'
 const FALLBACK_TEXT = '\\[T]/ Praise The Sun \\[T]/'
+const UPDATE_INTERVAL_MILLISECONDS = 30000
+const LOOP_INTERVAL_MILLISECONDS = 5000
 
 const init = async () => {
 	await initScheduleData()
@@ -154,16 +156,19 @@ const persistScheduleHash = async (schedule) => {
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
 
-const updateSchedule = async (schedule) => {
-	const scheduleChanged = await hasScheduleChanged(schedule)
+const updateSchedule = async () => {
+	setInterval(() => {
+		const scheduleChanged = await hasScheduleChanged(schedule)
 
-	if (scheduleChanged) {
-		processAndPersistSchedule(schedule)
-		persistScheduleHash(schedule)
-	}
+		if (scheduleChanged) {
+			processAndPersistSchedule(schedule)
+			persistScheduleHash(schedule)
+		}
+	}, UPDATE_INTERVAL_MILLISECONDS);
 }
 
 const renderInitialView = () => {
+	updateSchedule()
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	schedule ? renderMainView(schedule) : renderFallBackView()
 }
@@ -218,7 +223,7 @@ const displayOverview = () => {
 		const room = rooms[index]
 		displayRoomSchedule(room)
 		const nextIndex = (index + 1) % rooms.length
-		setTimeout(() => infitelyLoopRooms(nextIndex), 10000)
+		setTimeout(() => infitelyLoopRooms(nextIndex), LOOP_INTERVAL_MILLISECONDS)
 	}
 
 	infitelyLoopRooms()
