@@ -19,7 +19,7 @@ const getTalks = async () => {
 		return await response.json()
 	} catch (error) {
 		console.error(`Could not fetch schedule data due to following error: \n ${error}`)
-		return {}
+		return null
 	}
 }
 
@@ -102,6 +102,9 @@ const hashSchedule = async (schedule) => {
 
 
 const processAndPersistSchedule = (schedule) => {
+	if (!schedule) {
+		return
+	}
 	const processedSchedule = {}
 	const rooms = schedule?.schedule?.conference?.days[0]?.rooms
 	for (const [room, roomSchedule] of Object.entries(rooms)) {
@@ -145,6 +148,9 @@ const durationInMilliSeconds = (duration) => {
 }
 
 const persistScheduleHash = async (schedule) => {
+	if (!schedule) {
+		return
+	}
 	const hash = await hashSchedule(schedule)
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
