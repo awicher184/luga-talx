@@ -278,10 +278,23 @@ const createCard = (talk, isCurrent = true) => {
 
 	const speaker = document.createElement('p')
 	speaker.innerText = talk.speaker
+
 	const cardBody = document.createElement('div')
 
 	cardBody.append(cardHeader, talkTitle, speaker)
 	
+	if (isCurrent && talk.end !== '') {
+		const start = document.createElement('p')
+		start.innerText = 'laeuft seit: 15 minuten'
+		cardBody.appendChild(start)
+	}
+
+	if (!isCurrent && talk.start !== '') {
+		const end = document.createElement('p')
+		end.innerText = '21:36 (in 15 minuten)'
+		cardBody.appendChild(end)
+	}
+
 	const card = document.createElement('div')
 	card.id = isCurrent ? 'current' : 'next'
 	card.classList.add('card')
