@@ -1,9 +1,11 @@
 const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
+const STORAGE_KEY_ROOM = 'room'
 const FALLBACK_HEADLINE = 'Linux Info Tag'
 const FALLBACK_TEXT = '\\[T]/ Praise The Sun \\[T]/'
-const UPDATE_INTERVAL_MILLISECONDS = 30000
+const OVERVIEW = 'Übersicht'
+const UPDATE_INTERVAL_MILLISECONDS = 5000
 const LOOP_INTERVAL_MILLISECONDS = 5000
 
 const init = async () => {
@@ -14,7 +16,7 @@ const init = async () => {
 const initScheduleData = async () => {
 	const schedule = await getTalks()
 	processAndPersistSchedule(schedule)
-	persistScheduleHash(schedule)
+	await persistScheduleHash(schedule)
 }
 
 const getTalks = async () => {
@@ -77,6 +79,10 @@ const validateSchedule = (schedule) => {
 }
 
 const hasScheduleChanged = async (schedule) => {
+	if (!schedule) {
+		return true
+	}
+
 	const scheduleHash = window.localStorage.getItem(STORAGE_KEY_SCHEDULE_HASH)
 
 	if (!scheduleHash) {
@@ -156,26 +162,31 @@ const persistScheduleHash = async (schedule) => {
 	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
 
-const updateSchedule = async () => {
-	setInterval(() => {
+const updateSchedule = async (schedule) => {
+	setInterval(async () => {
+		console.log('praise')
 		const scheduleChanged = await hasScheduleChanged(schedule)
 
 		if (scheduleChanged) {
+		console.log('updated')
+			schedule = await getTalks()
 			processAndPersistSchedule(schedule)
 			persistScheduleHash(schedule)
+			const room = window.localStorage.getItem(STORAGE_KEY_ROOM)
+			room === OVERVIEW || room === 'null' ? displayOverview() : displayRoomSchedule(room)
 		}
 	}, UPDATE_INTERVAL_MILLISECONDS);
 }
 
 const renderInitialView = () => {
-	updateSchedule()
 	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 	schedule ? renderMainView(schedule) : renderFallBackView()
+	updateSchedule(schedule)
 }
 
 const renderMainView = (schedule) => {
 	clearBody()
-	getRoot().appendChild(createButton('Übersicht', displayOverview))
+	getRoot().appendChild(createButton(OVERVIEW, displayOverview))
 
 	for (const room of Object.keys(schedule)) {
 		if (room === 'Raum E' || room === 'Raum F') {
@@ -210,6 +221,7 @@ const createButton = (room, callback) => {
 }
 
 const displayOverview = () => {
+	window.localStorage.setItem(STORAGE_KEY_ROOM, OVERVIEW)
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 
 	if (!schedule) {
@@ -230,6 +242,7 @@ const displayOverview = () => {
 }
 
 const displayRoomSchedule = (room) => {
+	window.localStorage.setItem(STORAGE_KEY_ROOM, room)
 	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
 
 	if (!schedule) {
