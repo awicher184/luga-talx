@@ -95,6 +95,13 @@ const hasScheduleChanged = async (schedule) => {
 	return scheduleHash !== newScheduleHash
 }
 
+/**
+ * digest returns an ArrayBuffer. To display it as a string all 
+ * values have to be converted to hexadecimal strings.
+ * For in-depth explanations check:
+ * - https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API/Non-cryptographic_uses_of_subtle_crypto
+ * - https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
+*/
 const hashSchedule = async (schedule) => {
 	const encoder = new TextEncoder()
 	const encodedSchedule = encoder.encode(JSON.stringify(schedule))
