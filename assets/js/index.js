@@ -9,6 +9,9 @@ const UPDATE_INTERVAL_MILLISECONDS = 5000
 const LOOP_INTERVAL_MILLISECONDS = 5000
 const FALLBACK_CURRENT_TALK = {"speaker":"","title":"Aktuell laeuft kein Vortrag","subtitle":"","start":"","end":""}
 const FALLBACK_NEXT_TALK = {"speaker":"","title":"Heute ist nicht aller Tage Abend. Wir kommen wieder, keine Frage!","subtitle":"","start":"","end":""}
+const TIME_DISPLAY_UPDATE_INTERVAL_MS = 60000
+
+const NOW = new Date('2024-04-20T08:55:00')
 
 const init = async () => {
 	await initScheduleData()
@@ -173,7 +176,6 @@ const persistScheduleHash = async (schedule) => {
 
 const updateSchedule = async (schedule) => {
 	setInterval(async () => {
-		console.log('praise')
 		const scheduleChanged = await hasScheduleChanged(schedule)
 
 		if (scheduleChanged) {
@@ -258,6 +260,7 @@ const displayRoomSchedule = (room) => {
 
 	if (!schedule) {
 		renderFallBackView()
+		return
 	}
 
 	clearBody()
@@ -274,6 +277,8 @@ const displayRoomSchedule = (room) => {
 	if (nextTalk) {
 		getRoot().appendChild(createCard(nextTalk, false))
 	}
+
+	startTimeDisplayUpdates()
 }
 
 const createCard = (talk, isCurrent = true) => {
@@ -287,19 +292,23 @@ const createCard = (talk, isCurrent = true) => {
 	speaker.innerText = talk.speaker
 
 	const cardBody = document.createElement('div')
-
 	cardBody.append(cardHeader, talkTitle, speaker)
 	
 	if (isCurrent && talk.end !== '') {
-		const start = document.createElement('p')
-		start.innerText = 'laeuft seit: 15 minuten'
-		cardBody.appendChild(start)
+		const timeElement = document.createElement('p')
+		timeElement.id = 'current-time-info'
+		const minutesSinceStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
+		timeElement.innerText = `läuft seit: ${minutesSinceStart} Minuten`
+		cardBody.appendChild(timeElement)
 	}
 
 	if (!isCurrent && talk.start !== '') {
-		const end = document.createElement('p')
-		end.innerText = '21:36 (in 15 minuten)'
-		cardBody.appendChild(end)
+		const timeElement = document.createElement('p')
+		timeElement.id = 'next-time-info'
+		const startTime = formatDisplayTime(new Date(talk.start))
+		const minutesUntilStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
+		timeElement.innerText = `startet um: ${startTime} (in ${minutesUntilStart} Minuten)`
+		cardBody.appendChild(timeElement)
 	}
 
 	const card = document.createElement('div')
@@ -315,7 +324,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		return [FALLBACK_CURRENT_TALK, FALLBACK_NEXT_TALK]
 	}
 
-	const now = formatToHoursAndMinutes(new Date('2025-01-16T08:51:00'))
+	const now = formatToHoursAndMinutes(NOW)
 
 	let currentTalk = roomSchedule.find(talk => {
 		const start = formatToHoursAndMinutes(new Date(talk.start))
@@ -354,6 +363,41 @@ const clearBody = () => {
 
 const getRoot = () => {
 	return document.body.querySelector('#root')
+}
+
+const calculateDifferenceInMinutes = (start, end) => {
+	const differenceInMilliseconds = Math.abs(end - start)
+	return Math.floor(differenceInMilliseconds / (1000 * 60))
+}
+
+const formatDisplayTime = (date) => {
+	const hours = date.getUTCHours().toString().padStart(2, '0')
+	const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+	return `${hours}:${minutes}`
+}
+
+const updateTimeDisplay = () => {
+	const currentTimeInfo = document.getElementById('current-time-info')
+	const nextTimeInfo = document.getElementById('next-time-info')
+	const now = new Date()
+
+	if (currentTimeInfo && currentTimeInfo.dataset.startTime) {
+		const startTime = new Date(currentTimeInfo.dataset.startTime)
+		const minutesSinceStart = calculateDifferenceInMinutes(startTime, now)
+		currentTimeInfo.innerText = `läuft seit: ${minutesSinceStart} Minuten`
+	}
+
+	if (nextTimeInfo && nextTimeInfo.dataset.startTime) {
+		const startTime = new Date(nextTimeInfo.dataset.startTime)
+		const formattedStartTime = formatDisplayTime(startTime)
+		const minutesUntilStart = calculateDifferenceInMinutes(now, startTime)
+		nextTimeInfo.innerText = `Startet um: ${formattedStartTime} (in ${minutesUntilStart} Minuten)`
+	}
+}
+
+const startTimeDisplayUpdates = () => {
+	updateTimeDisplay()
+	setInterval(updateTimeDisplay, TIME_DISPLAY_UPDATE_INTERVAL_MS)
 }
 
 document.addEventListener('DOMContentLoaded', init)
