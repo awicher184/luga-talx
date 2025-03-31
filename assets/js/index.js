@@ -10,12 +10,19 @@ const LOOP_INTERVAL_MILLISECONDS = 5000
 const FALLBACK_CURRENT_TALK = {"speaker":"","title":"Aktuell laeuft kein Vortrag","subtitle":"","start":"","end":""}
 const FALLBACK_NEXT_TALK = {"speaker":"","title":"Heute ist nicht aller Tage Abend. Wir kommen wieder, keine Frage!","subtitle":"","start":"","end":""}
 const TIME_DISPLAY_UPDATE_INTERVAL_MS = 60000
+const FORMATTER = new Intl.DateTimeFormat('de-DE', {
+	hour: '2-digit',
+	minute: '2-digit',
+	hour12: false,
+	timeZone: 'Europe/Berlin'
+})
 
-const NOW = new Date('2024-04-20T08:55:00')
+const NOW = new Date('2024-04-20T08:55:00Z')
 
 const init = async () => {
 	await initScheduleData()
 	renderInitialView()
+	startClock()
 }
 
 const initScheduleData = async () => {
@@ -305,7 +312,7 @@ const createCard = (talk, isCurrent = true) => {
 	if (!isCurrent && talk.start !== '') {
 		const timeElement = document.createElement('p')
 		timeElement.id = 'next-time-info'
-		const startTime = formatDisplayTime(new Date(talk.start))
+		const startTime = FORMATTER.format(new Date(talk.start))
 		const minutesUntilStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
 		timeElement.innerText = `startet um: ${startTime} (in ${minutesUntilStart} Minuten)`
 		cardBody.appendChild(timeElement)
@@ -348,8 +355,8 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 }
 
 const formatToHoursAndMinutes = (date) => {
-	const hours = date.getUTCHours().toString().padStart(2, '0')
-	const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+	const formattedTime = FORMATTER.format(date)
+	const [hours, minutes] = formattedTime.split(':')
 	return parseInt(hours + minutes)
 }
 
@@ -370,27 +377,20 @@ const calculateDifferenceInMinutes = (start, end) => {
 	return Math.floor(differenceInMilliseconds / (1000 * 60))
 }
 
-const formatDisplayTime = (date) => {
-	const hours = date.getUTCHours().toString().padStart(2, '0')
-	const minutes = date.getUTCMinutes().toString().padStart(2, '0')
-	return `${hours}:${minutes}`
-}
-
 const updateTimeDisplay = () => {
 	const currentTimeInfo = document.getElementById('current-time-info')
 	const nextTimeInfo = document.getElementById('next-time-info')
-	const now = new Date()
 
-	if (currentTimeInfo && currentTimeInfo.dataset.startTime) {
-		const startTime = new Date(currentTimeInfo.dataset.startTime)
-		const minutesSinceStart = calculateDifferenceInMinutes(startTime, now)
+	if (currentTimeInfo && currentTimeInfo.startTime) {
+		const startTime = new Date(currentTimeInfo.startTime)
+		const minutesSinceStart = calculateDifferenceInMinutes(startTime, NOW)
 		currentTimeInfo.innerText = `läuft seit: ${minutesSinceStart} Minuten`
 	}
 
-	if (nextTimeInfo && nextTimeInfo.dataset.startTime) {
-		const startTime = new Date(nextTimeInfo.dataset.startTime)
-		const formattedStartTime = formatDisplayTime(startTime)
-		const minutesUntilStart = calculateDifferenceInMinutes(now, startTime)
+	if (nextTimeInfo && nextTimeInfo.startTime) {
+		const startTime = new Date(nextTimeInfo.startTime)
+		const formattedStartTime = FORMATTER.format(startTime)
+		const minutesUntilStart = calculateDifferenceInMinutes(NOW, startTime)
 		nextTimeInfo.innerText = `Startet um: ${formattedStartTime} (in ${minutesUntilStart} Minuten)`
 	}
 }
@@ -399,5 +399,17 @@ const startTimeDisplayUpdates = () => {
 	updateTimeDisplay()
 	setInterval(updateTimeDisplay, TIME_DISPLAY_UPDATE_INTERVAL_MS)
 }
+
+const startClock = () => {
+	renderClock()
+	setInterval(renderClock, 60000)
+}
+
+const renderClock = () => {
+	const clockElement = document.getElementById('clock')
+
+	const currentTime = new Date()
+
+	clockElement.innerHTML = `${FORMATTER.format(currentTime)}`}
 
 document.addEventListener('DOMContentLoaded', init)
