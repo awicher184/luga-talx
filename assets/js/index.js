@@ -42,52 +42,11 @@ const getTalks = async () => {
 }
 
 const validateSchedule = (schedule) => {
-	if (!schedule) {
+	if (!schedule || !schedule.schedule?.conference?.days?.[0]?.rooms) {
 		return false
 	}
-
-	if (
-		!Object.hasOwn(schedule, 'schedule') &&
-		schedule.schedule === null &&
-		schedule.schedule === undefined
-	) {
-		return false
-	}
-
-	if (
-		!Object.hasOwn(schedule.schedule, 'conference') &&
-		schedule.schedule.conference === null &&
-		schedule.schedule.conference === undefined
-	) {
-		return false
-	}
-	
-	if (
-		!Object.hasOwn(schedule.schedule.conference, 'days') &&
-		schedule.schedule.conference.days === null &&
-		schedule.schedule.conference.days === undefined
-	) {
-		return false
-	}
-
-	if (
-		!Object.hasOwn(schedule.schedule.conference.days, '0') &&
-		schedule.schedule.conference.days[0] === null &&
-		schedule.schedule.conference.days[0] === undefined &&
-		schedule.schedule.conference.days[0].length === 0
-	) {
-		return false
-	}
-
-	if (
-		!Object.hasOwn(schedule.schedule.conference.days[0], 'rooms') &&
-		schedule.schedule.conference.days[0] === null &&
-		schedule.schedule.conference.days[0] === undefined
-	) {
-		return false
-	}
-
-	return true
+	const rooms = schedule.schedule.conference.days[0].rooms
+	return Object.keys(rooms).length > 0
 }
 
 const hasScheduleChanged = async (schedule) => {
