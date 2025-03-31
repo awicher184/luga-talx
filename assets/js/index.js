@@ -83,30 +83,25 @@ const hashSchedule = async (schedule) => {
 }
 
 const processAndPersistSchedule = (schedule) => {
-	if (!schedule) {
+	if (!validateSchedule(schedule)) {
 		return
 	}
 
 	const processedSchedule = {}
-	const rooms = schedule?.schedule?.conference?.days[0]?.rooms
+	const rooms = schedule.schedule.conference.days[0].rooms
 
 	for (const [room, roomSchedule] of Object.entries(rooms)) {
-		if (!Object.hasOwn(processedSchedule, room)) {
-			processedSchedule[room] = []
-		}
-
-		roomSchedule.forEach(talk => {
-			const talkStart = new Date(talk.date)
-			const talkEnd = new Date(talkStart.getTime() + durationInMilliSeconds(talk.duration))
-			const processedTalk = {
-				speaker: concatSpeakers(talk.persons),
-				title: talk.title,
-				subtitle: talk.subtitle,
-				start: talkStart,
-				end: talkEnd,
-			}
-			processedSchedule[room].push(processedTalk)
-		})
+		processedSchedule[room] = roomSchedule.map(
+			talk => (
+				{
+					speaker: concatSpeakers(talk.persons),
+					title: talk.title,
+					subtitle: talk.subtitle,
+					start: new Date(talk.date),
+					end: new Date(new Date(talk.date).getTime() + durationInMilliSeconds(talk.duration)),
+				}
+			)
+		)
 	}
 
 	safeSetStorageItem(STORAGE_KEY_SCHEDULE, JSON.stringify(processedSchedule))
