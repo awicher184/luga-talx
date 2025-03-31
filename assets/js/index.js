@@ -113,16 +113,7 @@ const processAndPersistSchedule = (schedule) => {
 }
 
 const concatSpeakers = (persons) => {
-	let speakers = ''
-
-	for (let i = 0; i < persons.length; i++) {
-		if (i > 0 && i < persons?.length) {
-			speakers += ', '
-		}
-		speakers += persons[i].public_name
-	}
-
-	return speakers
+	return persons.map(person => person.public_name).join(', ')
 }
 
 const durationInMilliSeconds = (duration) => {
