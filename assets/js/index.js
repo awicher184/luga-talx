@@ -320,11 +320,8 @@ const formatToHoursAndMinutes = (date) => {
 }
 
 const clearBody = () => {
-	const root = document.querySelector('#root')
-
-	while (root.firstChild) {
-		root.removeChild(root.lastChild)
-	}
+	const root = getRoot()
+	root.innerHTML = ''
 }
 
 const getRoot = () => {
