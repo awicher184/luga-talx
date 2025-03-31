@@ -1,6 +1,13 @@
 body {
 	text-align: center;
 }
+header {
+	background-image: url('../images/lit_logo_light.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	height: 100px;
+}
 
 button {
 	margin: 1rem;
