@@ -54,7 +54,7 @@ const hasScheduleChanged = async (schedule) => {
 		return true
 	}
 
-	const scheduleHash = window.localStorage.getItem(STORAGE_KEY_SCHEDULE_HASH)
+	const scheduleHash = safeGetStorageItem(STORAGE_KEY_SCHEDULE_HASH)
 
 	if (!scheduleHash) {
 		return true
@@ -109,7 +109,7 @@ const processAndPersistSchedule = (schedule) => {
 		})
 	}
 
-	window.localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(processedSchedule))
+	safeSetStorageItem(STORAGE_KEY_SCHEDULE, JSON.stringify(processedSchedule))
 }
 
 const concatSpeakers = (persons) => {
@@ -128,7 +128,7 @@ const persistScheduleHash = async (schedule) => {
 	}
 
 	const hash = await hashSchedule(schedule)
-	window.localStorage.setItem(STORAGE_KEY_SCHEDULE_HASH, hash)
+	safeSetStorageItem(STORAGE_KEY_SCHEDULE_HASH, hash)
 }
 
 const updateSchedule = async (schedule) => {
@@ -139,7 +139,7 @@ const updateSchedule = async (schedule) => {
 			schedule = await getTalks()
 			processAndPersistSchedule(schedule)
 			persistScheduleHash(schedule)
-			const room = window.localStorage.getItem(STORAGE_KEY_ROOM)
+			const room = safeGetStorageItem(STORAGE_KEY_ROOM)
 			if (!room) {
 				return
 			}
@@ -149,7 +149,7 @@ const updateSchedule = async (schedule) => {
 }
 
 const renderInitialView = () => {
-	let schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	let schedule = JSON.parse(safeGetStorageItem(STORAGE_KEY_SCHEDULE))
 	schedule ? renderMainView(schedule) : renderFallBackView()
 	updateSchedule(schedule)
 }
@@ -191,8 +191,8 @@ const createButton = (room, callback) => {
 }
 
 const displayOverview = () => {
-	window.localStorage.setItem(STORAGE_KEY_ROOM, OVERVIEW)
-	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	safeSetStorageItem(STORAGE_KEY_ROOM, OVERVIEW)
+	const schedule = JSON.parse(safeGetStorageItem(STORAGE_KEY_SCHEDULE))
 
 	if (!schedule) {
 		renderFallBackView()
@@ -212,8 +212,8 @@ const displayOverview = () => {
 }
 
 const displayRoomSchedule = (room) => {
-	window.localStorage.setItem(STORAGE_KEY_ROOM, room)
-	const schedule = JSON.parse(window.localStorage.getItem(STORAGE_KEY_SCHEDULE))
+	safeSetStorageItem(STORAGE_KEY_ROOM, room)
+	const schedule = JSON.parse(safeGetStorageItem(STORAGE_KEY_SCHEDULE))
 
 	if (!schedule) {
 		renderFallBackView()
@@ -357,6 +357,24 @@ const renderClock = () => {
 
 	const currentTime = new Date()
 
-	clockElement.innerHTML = `${FORMATTER.format(currentTime)}`}
+	clockElement.innerHTML = `${FORMATTER.format(currentTime)}`
+}
+
+const safeGetStorageItem = (key) => {
+  try {
+    return JSON.parse(window.localStorage.getItem(key))
+  } catch (error) {
+    console.error(`Error accessing localStorage key "${key}":`, error)
+    return null
+  }
+}
+
+const safeSetStorageItem = (key, value) => {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch (error) {
+    console.error(`Error setting localStorage key "${key}":`, error)
+  }
+}
 
 document.addEventListener('DOMContentLoaded', init)
