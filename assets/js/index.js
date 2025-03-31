@@ -10,6 +10,10 @@ const LOOP_INTERVAL_MILLISECONDS = 5000
 const FALLBACK_CURRENT_TALK = {"speaker":"","title":"Aktuell laeuft kein Vortrag","subtitle":"","start":"","end":""}
 const FALLBACK_NEXT_TALK = {"speaker":"","title":"Heute ist nicht aller Tage Abend. Wir kommen wieder, keine Frage!","subtitle":"","start":"","end":""}
 const TIME_DISPLAY_UPDATE_INTERVAL_MS = 60000
+const CURRENT_TIME_ELEMENT = 'current-time-info'
+const CURRENT_TIME_LABEL = 'läuft seit'
+const NEXT_TIME_ELEMENT = 'next-time-info'
+const NEXT_TIME_LABEL = 'startet um'
 const FORMATTER = new Intl.DateTimeFormat('de-DE', {
 	hour: '2-digit',
 	minute: '2-digit',
@@ -158,7 +162,7 @@ const renderMainView = (schedule) => {
 			continue
 		}
 
-		let button = createButton(room, displayRoomSchedule.bind(null, room))
+		let button = createButton(room, () => displayRoomSchedule(room))
 		getRoot().appendChild(button)
 	}
 }
@@ -248,18 +252,22 @@ const createCard = (talk, isCurrent = true) => {
 	
 	if (isCurrent && talk.end !== '') {
 		const timeElement = document.createElement('p')
-		timeElement.id = 'current-time-info'
+		timeElement.id = CURRENT_TIME_ELEMENT
+		timeElement.dataset.startTime = talk.start
+
 		const minutesSinceStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
-		timeElement.innerText = `läuft seit: ${minutesSinceStart} Minuten`
+		timeElement.innerText = `${CURRENT_TIME_LABEL}: ${minutesSinceStart} Minuten`
 		cardBody.appendChild(timeElement)
 	}
 
 	if (!isCurrent && talk.start !== '') {
 		const timeElement = document.createElement('p')
-		timeElement.id = 'next-time-info'
+		timeElement.id = NEXT_TIME_ELEMENT
+		timeElement.dataset.startTime = talk.start
+
 		const startTime = FORMATTER.format(new Date(talk.start))
 		const minutesUntilStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
-		timeElement.innerText = `startet um: ${startTime} (in ${minutesUntilStart} Minuten)`
+		timeElement.innerText = `${NEXT_TIME_LABEL}: ${startTime} (in ${minutesUntilStart} Minuten)`
 		cardBody.appendChild(timeElement)
 	}
 
@@ -319,21 +327,29 @@ const calculateDifferenceInMinutes = (start, end) => {
 	return Math.floor(differenceInMilliseconds / (1000 * 60))
 }
 
-const updateTimeDisplay = () => {
-	const currentTimeInfo = document.getElementById('current-time-info')
-	const nextTimeInfo = document.getElementById('next-time-info')
+const updateTimeElement = (elementId, startTime, label) => {
+	const element = document.getElementById(elementId);
+	if (!element) {
+		return
+	}
+	const differenceInMinutes = calculateDifferenceInMinutes(new Date(startTime), NOW)
 
-	if (currentTimeInfo && currentTimeInfo.startTime) {
-		const startTime = new Date(currentTimeInfo.startTime)
-		const minutesSinceStart = calculateDifferenceInMinutes(startTime, NOW)
-		currentTimeInfo.innerText = `läuft seit: ${minutesSinceStart} Minuten`
+	element.innerText =
+		label === CURRENT_TIME_LABEL
+			? `${label}: ${differenceInMinutes} Minuten`
+			: `${label}: ${FORMATTER.format(new Date(startTime))} (in ${differenceInMinutes} Minuten)`
+}
+
+const updateTimeDisplay = () => {
+	const currentTimeInfo = document.getElementById(CURRENT_TIME_ELEMENT);
+	const nextTimeInfo = document.getElementById(NEXT_TIME_ELEMENT);
+
+	if (currentTimeInfo && currentTimeInfo.dataset.startTime) {
+		updateTimeElement(CURRENT_TIME_ELEMENT, currentTimeInfo.dataset.startTime, CURRENT_TIME_LABEL);
 	}
 
-	if (nextTimeInfo && nextTimeInfo.startTime) {
-		const startTime = new Date(nextTimeInfo.startTime)
-		const formattedStartTime = FORMATTER.format(startTime)
-		const minutesUntilStart = calculateDifferenceInMinutes(NOW, startTime)
-		nextTimeInfo.innerText = `Startet um: ${formattedStartTime} (in ${minutesUntilStart} Minuten)`
+	if (nextTimeInfo && nextTimeInfo.dataset.startTime) {
+		updateTimeElement(NEXT_TIME_ELEMENT, nextTimeInfo.dataset.startTime, NEXT_TIME_LABEL);
 	}
 }
 
