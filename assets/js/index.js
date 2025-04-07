@@ -1,4 +1,4 @@
-const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2024/schedule/export/schedule.json'
+const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2025/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
 const STORAGE_KEY_ROOM = 'room'
@@ -21,7 +21,7 @@ const FORMATTER = new Intl.DateTimeFormat('de-DE', {
 	timeZone: 'Europe/Berlin'
 })
 
-const NOW = new Date('2024-04-20T08:55:00Z')
+const NOW = new Date('2025-04-26T08:55:00Z')
 
 const init = async () => {
 	await initScheduleData()
