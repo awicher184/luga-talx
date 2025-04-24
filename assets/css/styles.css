@@ -1,19 +1,54 @@
 body {
 	text-align: center;
-}
-header {
-	background-image: url('../images/lit_logo_light.png');
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-	height: 100px;
-}
+	font-family: Garamond, sans-serif;
 
-button {
-	margin: 1rem;
-}
+	header {
+		background-image: url('../images/lit_logo_light.png');
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+		margin-top:2rem;
+		height: 100px;
+	}
 
-.card {
-	border: 1px solid red;
-	border-radius: 15px;
+	#clock{
+		font-size: 2.75rem;
+		margin-top: 1.25rem;
+	}
+
+	#root{
+		font-size: 1.25rem;
+
+		h1{
+			background-color: #fe7900;
+			color: white;
+			margin-bottom: 0px;
+			border-radius: 15px;
+		}
+
+		.card{
+			border: 1px solid #fe7900;
+			border-radius: 15px;
+
+			h2{
+				color: #fe7900;
+				text-shadow: 1px 1px #000000;
+				font-size: 2.25rem;
+			}
+
+			h4{
+				font-size: 1.5rem;
+			}
+
+		}
+
+		#next{
+			margin-top: -1px;
+
+		}
+	}
+
+	button {
+		margin: 1rem;
+	}
 }
