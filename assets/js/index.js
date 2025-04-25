@@ -255,7 +255,7 @@ const createCard = (talk, isCurrent = true) => {
 		timeElement.id = CURRENT_TIME_ELEMENT
 		timeElement.dataset.startTime = talk.start
 
-		const minutesSinceStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
+		const minutesSinceStart = calculateDifferenceInMinutes(new Date(), new Date(talk.start))
 		timeElement.innerText = `${CURRENT_TIME_LABEL}: ${minutesSinceStart} Minuten`
 		cardBody.appendChild(timeElement)
 	}
@@ -266,7 +266,7 @@ const createCard = (talk, isCurrent = true) => {
 		timeElement.dataset.startTime = talk.start
 
 		const startTime = FORMATTER.format(new Date(talk.start))
-		const minutesUntilStart = calculateDifferenceInMinutes(NOW, new Date(talk.start))
+		const minutesUntilStart = calculateDifferenceInMinutes(new Date(), new Date(talk.start))
 		timeElement.innerText = `${NEXT_TIME_LABEL}: ${startTime} (in ${minutesUntilStart} Minuten)`
 		cardBody.appendChild(timeElement)
 	}
@@ -284,7 +284,7 @@ const getCurrentAndNextTalk = (roomSchedule) => {
 		return [FALLBACK_CURRENT_TALK, FALLBACK_NEXT_TALK]
 	}
 
-	const now = formatToHoursAndMinutes(NOW)
+	const now = formatToHoursAndMinutes(new Date())
 
 	let currentTalk = roomSchedule.find(talk => {
 		const start = formatToHoursAndMinutes(new Date(talk.start))
@@ -332,7 +332,7 @@ const updateTimeElement = (elementId, startTime, label) => {
 	if (!element) {
 		return
 	}
-	const differenceInMinutes = calculateDifferenceInMinutes(new Date(startTime), NOW)
+	const differenceInMinutes = calculateDifferenceInMinutes(new Date(startTime), new Date())
 
 	element.innerText =
 		label === CURRENT_TIME_LABEL
