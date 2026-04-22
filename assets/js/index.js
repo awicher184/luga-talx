@@ -1,4 +1,4 @@
-const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2025/schedule/export/schedule.json'
+const SCHEDULE_URL = 'https://pretalx.luga.de/lit-2026/schedule/export/schedule.json'
 const STORAGE_KEY_SCHEDULE = 'schedule'
 const STORAGE_KEY_SCHEDULE_HASH = 'scheduleHash'
 const STORAGE_KEY_ROOM = 'room'
