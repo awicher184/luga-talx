@@ -23,6 +23,10 @@ const FORMATTER = new Intl.DateTimeFormat('de-DE', {
 
 const NOW = new Date('2025-04-26T08:55:00Z')
 
+let timeDisplayIntervalId = null
+let overviewLoopTimeoutId = null
+let updateScheduleIntervalId = null
+
 const init = async () => {
 	await initScheduleData()
 	renderInitialView()
@@ -131,7 +135,11 @@ const persistScheduleHash = async (schedule) => {
 }
 
 const updateSchedule = async (schedule) => {
-	setInterval(async () => {
+	if (updateScheduleIntervalId) {
+		clearInterval(updateScheduleIntervalId)
+	}
+
+	updateScheduleIntervalId = setInterval(async () => {
 		const scheduleChanged = await hasScheduleChanged(schedule)
 
 		if (scheduleChanged) {
@@ -201,10 +209,14 @@ const displayOverview = () => {
 	const rooms = Object.keys(schedule)
 
 	const infitelyLoopRooms = (index = 0) => {
+		if (overviewLoopTimeoutId){
+			clearTimeout(overviewLoopTimeoutId)
+		} 
+
 		const room = rooms[index]
 		displayRoomSchedule(room)
 		const nextIndex = (index + 1) % rooms.length
-		setTimeout(() => infitelyLoopRooms(nextIndex), LOOP_INTERVAL_MILLISECONDS)
+		overviewLoopTimeoutId = setTimeout(() => infitelyLoopRooms(nextIndex), LOOP_INTERVAL_MILLISECONDS)
 	}
 
 	infitelyLoopRooms()
@@ -354,8 +366,11 @@ const updateTimeDisplay = () => {
 }
 
 const startTimeDisplayUpdates = () => {
+	if (timeDisplayIntervalId){
+		clearInterval(timeDisplayIntervalId)
+	}
 	updateTimeDisplay()
-	setInterval(updateTimeDisplay, TIME_DISPLAY_UPDATE_INTERVAL_MS)
+	timeDisplayIntervalId = setInterval(updateTimeDisplay, TIME_DISPLAY_UPDATE_INTERVAL_MS)
 }
 
 const startClock = () => {
